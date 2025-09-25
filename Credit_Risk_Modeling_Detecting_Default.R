@@ -195,3 +195,41 @@ tab5 <- as.data.frame(cbind(tab3$Class, tab3$`Freq berfore oversampling`, tab4$`
 colnames(tab5) <- c("Class", "Freq berfore oversampling", "Freq after oversampling")
 tab6 <- tab5 %>% formattable()
 tab6
+
+# Split into training/testing 
+sample_data <- sample(nrow(over_data), 0.7*nrow(over_data))
+train <- over_data[sample_data,]
+test <- over_data[-sample_data,]
+
+# Dimension of training subset
+dim(train)
+
+# Dimension of test subset
+dim(test)
+
+# Correlation Matrix
+
+install.packages("polycor")
+library(polycor)
+train_corelation <-hetcor(train)
+train_cor_table <- as.data.frame(train_corelation$correlations)
+
+install.packages("ggcorrplot")
+library(ggcorrplot)
+
+cor_plot1 <- ggcorrplot(train_cor_table, colors = c("azure1", "azure2", "lightcyan4", "cadetblue3"))+
+  labs(title = "Correlation matrix")
+
+  # Logisitc Regression Model
+## Need the gim function
+
+model1 <- glm(formula = Dummy_results ~ CheckingStatus + SavingsStatus + Duration + Age + CreditAmount,
+data = train, family = binomial(link = "logit"))
+
+summary(model1)
+
+# Confusion matrix
+
+predicted <- predict(model1, newdata = test, type = "response")
+pred <- ifelse(predicted > 0.5, 1,0)
+table(predicted = pred, actuals = test$Dummy_results)
