@@ -83,3 +83,45 @@ German_Credit$CheckingStatus <- factor(German_Credit$CheckingStatus,
 German_Credit$CreditHistory <- factor(German_Credit$CreditHistory,
                                     levels = c("A30", "A31", "A32", "A33", "A34"),
                                     labels = c("no credits taken", "all credits at this bank paid back duly", "existing credits paid back duly till now", "delay in paying off in the past", "critical account"))
+
+grid.arrange(p2, p4, ncol=2)
+options(repr.plot.width = 10, repr.plot.height = 8)
+
+## Checking Accounts
+
+DM - Deutsche Mark Currency 
+
+Status of checking accounts a big majority shows "good" credit as having zero checking accounts. Bad credit on checking accounts shows no checking accounts are a mintority which is expected. Less than zero DM and 0 - 200 are close to even. 
+
+
+
+
+## Savings Accounts
+
+Good credit on savings accounts, there is a large chunk that have no savings accounts. The savings accounts related to bad credit < 100 DM takes up a large majority. Checkings account with arount half of the userbase seem to have access to no checking accounts compared to around 25% of savings accounts of user access. These results are show the data presumes users with no savings/less DM value per savings account have a better credit score than other users which may be misleading.
+
+table_c_p <- as.data.frame(count(group_by(German_Credit, CheckingStatus, Purpose)))
+colnames(table_c_p) <- c( "Status of checking account", "Purpose","Freq")
+
+tab1 <- table_c_p %>% formattable()
+tab1
+
+# Majority of loans offered are of car loans for each sub category and furniture and equipment. 
+
+summary(German_Credit$CreditAmount)
+summary(German_Credit$Duration)
+
+# Summaries of Credit Amount and Duration
+summary(German_Credit$CreditAmount)
+summary(German_Credit$Duration)
+
+# Histograms for Credit Amount and Duration
+hist_credit <- ggplot(data = German_Credit, aes(CreditAmount)) + geom_histogram(breaks=seq(0, 13000, by=500),
+    col="blue", 
+    aes(fill=..count..)) +
+    scale_fill_gradient("Count", low="cyan", high="cyan4")
+  
+hist_duration <- hist(German_Credit$Duration, main="Distribution of Duration", xlab="Duration")
+
+# Arrange plots side by side
+grid.arrange(plot(hist_credit), plot(hist_duration), ncol=2)
