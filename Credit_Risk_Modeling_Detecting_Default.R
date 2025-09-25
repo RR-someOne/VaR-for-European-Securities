@@ -125,3 +125,73 @@ hist_duration <- hist(German_Credit$Duration, main="Distribution of Duration", x
 
 # Arrange plots side by side
 grid.arrange(plot(hist_credit), plot(hist_duration), ncol=2)
+
+# Data Preprocessing
+# Check for missing values, there are no missing data
+
+colSums(is.na(German_Credit))
+
+# Handling outliers with mean, std
+
+# Get all numeric data
+
+#Numeric variables
+isn <- function(German_Credit){
+  val = sapply(German_Credit, is.numeric)
+  return(val)
+}
+
+library(dplyr)
+only_numeric <- as.data.frame(select_if(German_Credit, isn(German_Credit)))
+
+# The columns to exclude from outlier analysis are 'InstallmentRate' and 'NumDependents' based on the original code's intent
+only_numeric <- only_numeric[, !(colnames(only_numeric) %in% c("InstallmentRate", "NumDependents"))]
+
+
+library(reshape)
+melt_numeric <- melt(only_numeric)
+
+# Boxplot for visualization
+boxplot(data=melt_numeric, value~variable, main="Boxplots of Numeric Variables", xlab="Variable", ylab="Value")
+
+#Data preprocessing outliers using mean and standard deviation
+out3d <- function(x) {
+  m = mean(x, na.rm = TRUE) # Add na.rm = TRUE to handle potential NA values
+  s = sd(x, na.rm = TRUE) # Add na.rm = TRUE
+  u = m + 3*s
+  l = m - 3*s
+  val = list(lower = l, upper = u)
+  return(val)
+}
+
+# Define columns for outlier treatment - use correct column names from only_numeric
+outlier_cols <- c("Duration", "CreditAmount", "Age", "ExistingCredits", "ResidenceDuration") # Assuming these are the intended columns
+
+
+for (col in outlier_cols) {
+  outlierlist = out3d(German_Credit[[col]])
+  lc <- outlierlist$lower
+  uc <- outlierlist$upper
+
+  # Replace outliers with lower/upper bounds
+  German_Credit[[col]][German_Credit[[col]] < lc] = lc
+  German_Credit[[col]][German_Credit[[col]] > uc] = uc
+}
+
+# Optional: Display summaries after outlier treatment
+# summary(German_Credit[outlier_cols])
+
+# Fix class imbalance problem, need to balance the classes so use oversampling method
+
+install.packages("ROSE")
+library(ROSE)
+over_data <- ovun.sample(Dummy_results~ .,data = German_Credit, method = "over", N=1398)$data
+
+tab3 <- as.data.frame(table(German_Credit$Dummy_results))
+colnames(tab3) <- c("Class", "Freq berfore oversampling")
+tab4 <- as.data.frame(table(over_data$Dummy_results))
+colnames(tab4) <- c("Class", "Freq after oversampling")
+tab5 <- as.data.frame(cbind(tab3$Class, tab3$`Freq berfore oversampling`, tab4$`Freq after oversampling`))
+colnames(tab5) <- c("Class", "Freq berfore oversampling", "Freq after oversampling")
+tab6 <- tab5 %>% formattable()
+tab6
